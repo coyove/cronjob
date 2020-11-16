@@ -1,0 +1,156 @@
+{{template "header.html" .}}
+
+{{if .IsUserTimeline}}
+    {{if eq .User.ID "master"}}
+        <title>广场</title>
+    {{else}}
+        <title>{{.User.DisplayName}}</title>
+        <div class="status-box">{{template "user_public.html" .User}}</div>
+    {{end}}
+{{else if .IsInbox}}
+    <title>我的提醒</title>
+{{else if .IsUserLikeTimeline}}
+    <title>{{.User.DisplayName}} 的收藏</title>
+{{else if .IsTagTimeline}}
+    <title>{{.Tag}} ({{.PostsUnderTag}})</title>
+{{else if .IsSearchTimeline}}
+<title>{{if .Tag}}{{.Tag}} 的搜索结果{{else}}搜索{{end}}</title>
+    <div class="status-box">
+        <form onsubmit="location.href='/search/'+encodeURIComponent(this.querySelector('input').value);return false">
+            <div class="status">
+                <div class=title>
+                    <div style="display:flex;width:100%;margin:0.5em 0" class="tmpl-border tmpl-input-bg">
+                        <input style="width:100%;line-height:1.5em;text-align:left" placeholder="搜索" class=t value="{{.Tag}}" autofocus>
+                        <input type=submit style="position: absolute; left: -9999px">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{{else}}
+    <div class="status-box">
+        <title>我的时间线</title>
+        <div>{{template "user_private.html" .User}}</div>
+    </div>
+{{end}}
+
+{{if and (eq .User.ID "master") .You}}
+    {{template "tags_heat.html" .HotTags}}
+{{end}}
+
+<div class="rows" id="timeline{{.ReplyView.UUID}}" style="">
+    {{if and .ShowNewPost (ne .User.ID "master")}}
+        {{template "reply_view.html" .ReplyView}}
+    {{end}}
+
+<div style='padding:0 0.5em;cursor:pointer;line-height:2.5em' class=tmpl-navbar-titlebar-bg>
+{{if .IsInbox}}
+    <button style="margin:0.5em 0" class=gbutton onclick="$postReload(this,'/api/clear_inbox',{})">清空全部提醒</button>
+{{else if .IsSearchTimeline}}
+    {{if .Tag}}
+        共搜索到 {{.PostsUnderTag}} 条结果
+    {{else}}
+        搜索限制: 前100条记录
+    {{end}}
+{{else}}
+    {{if or .IsTagTimeline .IsUserLikeTimeline}}
+    <div class="tl-checkpoints post-options" style="padding:0.5em 0;margin:0 0.5em;font-weight:bold;white-space:nowrap">
+        {{if .IsTagTimeline}}
+	    {{if not (contains .Tag " ")}}
+            <span style="margin-left: -0.5em">
+                {{template "button_follow_block.html" (blend "follow" .Tag .IsTagTimelineFollowed)}}
+            </span>
+	    {{end}}
+            {{.Tag}} ({{.PostsUnderTag}})
+        {{else if .IsUserLikeTimeline}}
+            {{if eq .You.ID .User.ID}}我{{else}}{{.User.DisplayName}}{{end}}的收藏
+        {{end}}
+    </div>
+    {{end}}
+
+    {{if and .IsUserTimeline .IsUserWaitAccept}}
+    <div class="tl-checkpoints post-options" style="padding:0.5em 0;margin: 0 0.5em">
+      {{template "button_follow_block.html" (blend "accept" .User.ID false)}}
+    </div>
+    {{end}}
+
+    <div class="tl-checkpoints post-options" style="padding:0.5em 0;margin: 0 0.5em">
+        <div style=>
+            <b>查看:</b>
+            <span>
+            {{if .CurrentCheckpoint}}
+                {{.CurrentCheckpoint}}月
+            {{else if .MediaOnly}}
+                仅图片
+            {{else}}
+                全部
+                {{if .User.IsYou}}
+                ({{getTotalPosts .User.ID}})
+                {{end}}
+            {{end}}
+            </span>
+            <i class="icon-down-dir right"></i>
+        </div>
+        <ul>
+            <li onclick='location.href="?media"'><i class=icon-calendar></i> 全部</li>
+            <li onclick='location.href="?media=1"'><i class=icon-picture></i> 仅图片</li>
+            {{if ne .User.ID "master"}}
+            {{range .Checkpoints}}
+            <li onclick="location.href='?cp={{.}}'"><i class="icon-history"></i> {{.}}月</li>
+            {{end}}
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="tl-checkpoints post-options" style="padding:0.5em 0;">
+        <div style=>
+            <input type=checkbox id=auto-expand-nsfw class=icon-input-checkbox
+                   {{if .You}}{{if .You.Settings.AutoNSFW}}checked{{end}}{{end}}>
+            <i class=icon-calendar></i>
+            <label for=auto-expand-nsfw>展开NSFW</label>
+        </div>
+    </div>
+{{end}}
+</div>
+
+    <div class="row-reply-inserter" style="display:none"></div>
+
+    {{range .Articles}}
+    {{template "row_content.html" .}}
+    {{end}}
+</div>
+
+<div class=paging>
+    {{if .Next}}
+    <button
+        value="{{.Next}}"
+        class="gbutton load-more"
+        onclick="loadMore('timeline{{.ReplyView.UUID}}',this,{
+            search:{{.IsSearchTimeline}},
+            searchtag:{{.Tag}},
+            likes:{{.IsUserLikeTimeline}},
+            media:{{.MediaOnly}},
+        })">更多...</button>
+
+    <script>
+        preLoadMore("timeline{{.ReplyView.UUID}}", $q("#timeline{{.ReplyView.UUID}} + .paging > .load-more"));
+    </script>
+
+    {{else}}
+    <a class="gbutton tmpl-light-text" href="#">
+        {{if .IsUserTimeline}}
+            {{if eq .User.ID "master"}}
+                没有更多状态了
+            {{else}}
+                没有更多{{.User.ID}}的状态了
+            {{end}}
+        {{else if .IsInbox}}
+            没有更多提醒了
+        {{else if .IsSearchTimeline}}
+            {{if .Tag}} 没有更多结果了 {{end}}
+        {{else}}
+            没有更多状态了
+        {{end}}
+    </a>
+    {{end}}
+</div>

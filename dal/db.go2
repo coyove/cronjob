@@ -1,0 +1,96 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"time"
+
+	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/http"
+	"github.com/aws/aws-sdk-go/aws"
+)
+
+func main() {
+	fmt.Println()
+	conn, err := http.NewConnection(http.ConnectionConfig{
+		Endpoints: []string{"http://devbox0:8529"},
+	})
+	if err != nil {
+		// Handle error
+	}
+
+	c, err := driver.NewClient(driver.ClientConfig{
+		Connection:     conn,
+		Authentication: driver.BasicAuthentication("root", "000731"),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	// Open "examples_books" database
+	db, _ := c.CreateDatabase(nil, "example_books", nil)
+	if db == nil {
+		db, _ = c.Database(nil, "example_books")
+	}
+
+	// Open "books" collection
+	col, _ := db.CreateCollection(nil, "books", nil)
+	if col == nil {
+		col, _ = db.Collection(nil, "books")
+	}
+
+	if false {
+		v, _ := db.View(nil, "books_search")
+		if v != nil {
+			v.Remove(nil)
+		}
+	}
+
+	view, err := db.CreateArangoSearchView(nil, "books_search", &driver.ArangoSearchViewProperties{
+		Links: driver.ArangoSearchLinks{
+			"books": {
+				IncludeAllFields: aws.Bool(true),
+				Fields: driver.ArangoSearchFields{
+					"Title": {
+						Analyzers: []string{"text_zh", "text_en"},
+					},
+				},
+			},
+		},
+	})
+	log.Println(view, err)
+	// if view == nil {
+	// 	v, _ := db.View(nil, "books_search")
+	// 	view = v.(driver.ArangoSearchView)
+	// }
+
+	// Create document
+	if false {
+		book := map[string]interface{}{
+			"Title":   fmt.Sprint(time.Now()) + " ArangoDB Cookbook 【中文字幕】金元寿子首次谈及中国留学经历 https://bytedance.feishu.cn/sheets/shtcnIUz8i7DhwXwJArB4x5InBb",
+			"NoPages": 257,
+		}
+		meta, err := col.CreateDocument(nil, book)
+		if err != nil {
+			// Handle error
+		}
+		fmt.Printf("Created document in collection '%s' in database '%s'\n", col.Name(), db.Name())
+		fmt.Println("me", meta)
+
+		col.UpdateDocument
+	}
+
+	q, err := db.Query(nil, `FOR doc IN books_search
+  SEARCH ANALYZER(doc.Title IN TOKENS("中国bytedance经历", "text_zh"), "text_zh") 
+  SORT TFIDF(doc) DESC
+  RETURN doc`, nil)
+
+	log.Println(err)
+	log.Println("Count:", q.Count())
+	for q.HasMore() {
+		m := map[string]interface{}{}
+		q.ReadDocument(nil, &m)
+		log.Println(m)
+	}
+	q.Close()
+}

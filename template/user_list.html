@@ -1,0 +1,106 @@
+{{template "header.html" .}}
+{{$own := eq $.You.ID $.User.ID}}
+
+<div class="status-box">
+    {{if eq .ListType "followings"}}
+        {{if $own}}
+            <title>我的关注</title>
+            {{template "user_private.html" .User}}
+        {{else}}
+            <title>{{.User.DisplayName}}的关注</title>
+            {{template "user_public.html" .User}}
+        {{end}}
+    {{else if eq .ListType "blacklist"}}
+        <title>黑名单</title>
+        {{template "user_private.html" .User}}
+    {{else if eq .ListType "twohops"}}
+        <title>关系</title>
+        {{template "user_public.html" .User}}
+    {{else}}
+        {{if $own}}
+            <title>我的粉丝</title>
+            {{template "user_private.html" .User}}
+        {{else}}
+            <title>{{.User.DisplayName}}的粉丝</title>
+            {{template "user_public.html" .User}}
+        {{end}}
+    {{end}}
+</div>
+
+<div class="articles tmpl-border" style="border-top:solid 1px transparent">
+
+{{range .List}}
+    {{if .FullUser}}
+    <div style="display: flex; line-height: 2.5em">
+        <div style="flex-shrink:0;white-space:nowrap;margin-right:0.5em">{{formatTime .Time}}</div>
+        {{if ne $.ListType "twohops"}}
+        <div style="flex: 1 100%; overflow: hidden; text-overflow: ellipsis;">
+            {{template "display_name.html" .FullUser}}
+        </div>
+        <div style="text-align:right; flex: 0 48px; white-space: nowrap">
+            {{if eq $.ListType "blacklist"}}
+                {{template "button_follow_block.html" (blend "block-span" .ID .Blocked)}}
+            {{else if eq $.ListType "followers"}}
+                {{if not .RevFollowed}}
+                    <button class=gbutton disabled>已取关</button>
+                {{else}}
+                    {{if $own}}
+                        {{if not .Accepted}}
+                        {{template "button_follow_block.html" (blend "accept" .ID false)}}
+                        {{end}}
+                        {{template "button_follow_block.html" (blend "follow" .ID .Followed)}}
+                        {{template "button_follow_block.html" (blend "block" .ID false)}}
+                    {{else}}
+                        <button class=gbutton>关注中</button>
+                    {{end}}
+                {{end}}
+            {{else if eq $.ListType "twohops"}}
+                {{if and .TwoHopsFollowing .CommonFollowing}}
+                    <button class=gbutton>双向关注</button>
+                {{else if .TwoHopsFollowing}}
+                    <button class=gbutton>粉丝</button>
+                {{else if .CommonFollowing}}
+                    <button class=gbutton>你们共同关注</button>
+                {{end}}
+            {{else}}
+                {{if $own}}
+                    {{template "button_follow_block.html" (blend "follow" .ID .Followed)}}
+                    {{template "button_follow_block.html" (blend "block" .ID .Blocked)}}
+                {{else}}
+                <button class=gbutton {{if .Followed}}>关注中{{else}} disabled>已取关{{end}}</button>
+                {{end}}
+            {{end}}
+        </div>
+        {{else}}
+        <div style="flex: 1 100%; overflow: hidden; text-overflow: ellipsis;">
+            {{if and .TwoHopsFollowing .CommonFollowing}}
+                {{template "display_name.html" .FullUser}} 与其互相关注
+            {{else if .TwoHopsFollowing}}
+                {{template "display_name.html" .FullUser}} 也是其粉丝
+            {{else if .CommonFollowing}}
+                你们共同关注了 {{template "display_name.html" .FullUser}}
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+    {{end}}
+
+    <div class=tmpl-border style="margin: 0.5em 0;padding-top:0.5em;border-top:solid 1px transparent;text-align:center">
+        {{if .Next}}
+            {{if .List}}
+                <a href="?n={{.Next}}" class=gbutton>更多 &raquo;</a>
+            {{else}}
+                <a href="?n={{.Next}}" disabled class="gbutton tmpl-light-text">获取数据中...</a>
+                <script>setTimeout(function() { location.reload() }, 2000)</script>
+            {{end}}
+        {{else}}
+            <a href="?n=" class="gbutton tmpl-light-text">没有更多结果</a>
+        {{end}}
+    </div>
+</div>
+
+
+<style>
+.post-author { margin: 0 }
+</style>

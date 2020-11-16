@@ -1,0 +1,113 @@
+{{if .User}}
+
+<button class='btn btn-primary' onclick='$uploadImage(this, null, function(v) {
+        // document.body.appendChild(v.img);
+        console.log(v)
+        })'>upload</button>
+
+    <script>
+        $('body').on('paste', function(e) {
+            console.log(e);
+        })
+    </script>
+
+{{else}}
+
+<title>注册</title>
+<div style="overflow: hidden;margin:1em auto;position:relative;max-width:350px">
+<style>
+    form {
+        margin: 1em 0;
+    }
+</style>
+    <form method="POST"
+          action="/user"
+          onsubmit='$post($("#login"), "/api2/login", {
+                "username": $("#login-id").val(),
+                "password": $("#login-password").val(),
+                "remember": $("#login-remember").checked ? "1" : ""
+              }, true)
+              return false;'>
+
+        <div class="form-group">
+            <input class="form-control" placeholder="ID/邮箱" id=login-id>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type=password class=t placeholder="密码" id=login-password>
+        </div>
+        <div class="form-group form-check">
+            {{$tmp := session}}
+            <input class="form-check-input" id={{$tmp}} type=checkbox name=login-remember>
+            <label class="form-check-label" for={{$tmp}}>记住我</label>
+            <span style="float:right">
+                <button class="btn btn-primary" type=submit id="login">登入</button>
+            </span>
+        </div>
+    </form>
+
+    <div class="ui horizontal divider"> 没有账号? </div>
+
+    <form method="POST"
+          action="/user"
+          onsubmit='(function() {
+                        var data = {}, el = $("#signup");
+                        for (var f of ["password", "email", "uuid", "answer"])
+                            data[f] = $("[name=" + f + "]").val() || "";
+                        if (data.email.length < 3 || data.password.length < 3) {
+                            $popup(el, "Email或密码过短 (至少3字节)");
+                        } else {
+                            $post(el, "/api2/signup", data).done(function(r) {
+                                if (r === "ok") location.reload();
+                                $.refreshCaptcha();
+                                $popup(el, __i18n(r));
+                            })
+                        }
+                    })()
+                    return false;'>
+
+        <div class="form-group">
+            <input type=hidden name=uuid value="{{.UUID}}">
+        </div>
+        <div class="form-group">
+            <label>邮箱</label>
+            <input type=email class='form-control' placeholder="邮箱" name=email>
+        </div>
+        <div class="form-group">
+            <label>密码 (至少3英文字符)</label>
+            {{$tmp := session}}
+            <input id="pwd{{$tmp}}" type=password class='form-control' placeholder="密码" name=password>
+        </div>
+        <div class="form-group form-check">
+            <input class="form-check-input" id={{$tmp}} type=checkbox onchange="$('#pwd{{$tmp}}').attr('type',this.checked?'text':'password')">
+            <label class="form-check-label" for={{$tmp}}>显示密码</label>
+        </div>
+        <div class="form-group">
+            <div style="display:flex;width:100%">
+                <div style="flex-grow:0">
+                    <div style="width:120px">
+                        <a href="javascript:$.refreshCaptcha()">
+                            <img name=captcha src="data:image/png;base64,{{.Challenge}}" style="background:white;width:100%;border:solid 1px #ccc">
+                        </a>
+                        <input style="width:100%;margin-top:0.5em" type=number class="form-control" placeholder="验证码(4数字)" name=answer>
+                    </div>
+                </div>
+                <script>
+                    $.refreshCaptcha = function() {
+                        $post($("#signup"), '/api/new_captcha').done(function(data, r, x) {
+                            $("[name=captcha]").attr('src', "data:image/png;base64," + x.getResponseHeader("X-Challenge"));
+                            $("[name=uuid]").val(x.getResponseHeader("X-Uuid"));
+                            $("[name=answer]").val('');
+                        })
+                    }
+                </script>
+                <div style="flex-grow:1;display:flex;margin-left:0.5em;text-align:right">
+                    <div style="align-self:flex-end;flex-grow:1">
+                        <button class="btn btn-success" type=submit id="signup">注册</button>
+                    </div>
+                </div>
+            </div>
+            <!-- SIGNUP -->
+        </div>
+    </form>
+</div>
+{{end}}

@@ -1,0 +1,106 @@
+{{$notFound := eq .ShowList 255}}
+
+<div class="status">
+    <div class="tmpl-userbox-title row-header title" style="text-align:left">
+        <div style="flex:0 48px">
+            <div class=avatar-container>
+                <img class="avatar" {{template "avatar.html" .}} onclick="location.href='/t/{{.ID}}'">
+            {{if .Kimochi}}
+            <img class="avatar-kimochi" src="{{.KimochiURL}}">
+            {{end}}
+            </div>
+        </div>
+        <div style="flex:1 100%;text-align:center;overflow: hidden;text-overflow: ellipsis">
+            {{template "display_name.html" .}}
+        </div>
+
+        <div style="flex-grow:0;white-space:nowrap;margin:0">
+
+        {{if and (not .IsYou) (not $notFound)}}
+        {{template "button_follow_block.html" (blend "follow" .ID .IsFollowing)}}
+        {{template "button_follow_block.html" (blend "block" .ID .IsBlocking)}}
+        {{else}}
+        <button class="gbutton" disabled><i class="tmpl-light-text icon-heart-broken"></i></button>
+        <button class="gbutton" disabled><i class="tmpl-light-text icon-block"></i></button>
+        {{end}}
+        </div>
+
+        <div class=tri></div>
+    </div>
+
+    <div class="title tmpl-border" style="border-bottom: dotted 1px transparent;text-align:left;line-height:1.66em">
+      {{if $notFound}}
+        <pre style="margin:0.5em 0">用户不存在</pre>
+      {{else}}
+        <pre style="margin:0.5em 0"><!--
+        -->{{.Settings.DescHTML}}<!--
+        --><div class=tmpl-mid-text style="font-size:90%;white-space:normal">
+            <b>加入于</b> {{formatTime .Signup}}&nbsp;
+            <b>活跃于</b> {{formatTime (getLastActiveTime .ID)}}&nbsp;
+            {{if not .IsYou}}
+                {{if and .IsFollowing .IsFollowed}}
+                <b>互相关注</b>
+                {{else if .IsFollowing}}
+                <b>关注中</b>
+                {{else if .IsFollowed}}
+                <b>你的关注者</b>
+                {{end}}
+            {{else if .ID}}
+                <b>你</b>
+            {{end}}
+
+            {{if not .IsYou}}
+            {{if .IsFollowingNotAccepted}}
+                <b>等待其确认关注</b>
+            {{else}}
+                {{if and (not .IsFollowing) .FollowApply}}
+                <b>关注需要其确认</b>
+                {{end}}
+            {{end}}
+
+            <a href="/user/twohops/{{.ID}}" class="tmpl-link-text icon-connectdevelop">关系</a>
+            {{end}}
+
+            {{$iploc := .RecentIPLocation}}
+            {{if $iploc}}
+            <i class=icon-location></i><b>{{$iploc}}</b>
+            {{end}}
+            </div><!--
+        --></pre>
+      {{end}}
+    </div>
+
+    {{if not $notFound}}
+    <div class="title">
+        <span>
+            <b>
+            {{if .ID}}
+                <a href="/user/followings/{{.ID}}">
+                    {{.Followings}} <span class=sub-status>关注</span>
+                </a>
+            {{else}}
+                -
+            {{end}}
+            </b>
+        </span>
+        <span>
+            <b>
+            {{if .ID}}
+                <a href="/user/followers/{{.ID}}">
+                    {{.Followers}} <span class=sub-status>粉丝</span>
+                </a>
+            {{else}}
+                -
+            {{end}}
+            </b>
+        </span>
+        <span>
+            <b>
+            <a href="/likes/{{.ID}}">
+                <span class="sub-status icon-heart-filled">收藏</span>
+            </a>
+            </b>
+        </span>
+    </div>
+    {{end}}
+</div>

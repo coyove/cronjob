@@ -1,0 +1,234 @@
+.gbutton {
+    position: relative;
+    display: inline-block;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: none;
+    padding: 0 6px;
+    height: 34px;
+    vertical-align: middle;
+    text-align: center;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    color: {{.Button}};
+    background-color: transparent;
+    font-family: var(--pure-material-font, "Roboto", "Segoe UI", BlinkMacSystemFont, system-ui, -apple-system);
+    font-weight: 500;
+    line-height: 34px;
+    overflow: hidden;
+    outline: none;
+    cursor: pointer;
+}
+
+.gbutton::-moz-focus-inner {
+    border: none;
+}
+
+/* Overlay */
+.gbutton::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: currentColor;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* Ripple */
+.gbutton::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border-radius: 50%;
+    padding: 50%;
+    width: 32px;
+    height: 32px;
+    background-color: currentColor;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1) ;
+    transition: opacity 1s, transform 0.5s;
+}
+
+/* Hover, Focus */
+.gbutton:hover::before {
+    opacity: 0.12;
+}
+
+.gbutton:focus::before {
+    opacity: 0.16;
+}
+
+.gbutton:hover:focus::before {
+    opacity: 0.20;
+}
+
+/* Active */
+.gbutton:active::after {
+    opacity: 0.20;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0s;
+}
+
+/* Disabled */
+.gbutton:disabled {
+    color: {{.ButtonDisabled}};
+    background-color: transparent;
+    cursor: initial;
+}
+
+.gbutton:disabled::before {
+    opacity: 0;
+}
+
+.gbutton:disabled::after {
+    opacity: 0;
+}
+
+.gbutton:hover {
+    text-decoration: none;
+}
+.icon-down-big.cls-reply {
+    color: {{.ClsReplyIndicator}}
+}
+.icon-flow-merge:before {
+    margin-left: 0 !important 
+}
+.icon-down-dir.right:before {
+    margin-right: 0 !important 
+}
+.icon-history.left:before {
+    margin-left: 0 !important 
+}
+.control.icon-left-small, .control.icon-link {
+    font-size:16px;
+    cursor:pointer; 
+}
+.control.icon-left-small:hover,.control.icon-link:hover {
+    color: {{.MidGrayText}}
+}
+.media .image-index.image-next:before {
+    margin-left: 0;
+    margin-right: 0;
+}
+.follow-block .icon-user-plus {
+    color: {{.AddFriend}} 
+}
+.follow-block .icon-heart-broken {
+    color: {{.RemoveFriend}}
+}
+.icon-block.block-true, .icon-block.block-false {
+    color: {{.RedText}};
+}
+.icon-block.block-false {
+    text-shadow: 0 0 2px black;
+    color: white; 
+}
+.reply-table .icon-comment {
+    padding-top: 1px; 
+}
+.icon-input-checkbox.poll-choice + [class^=icon-]:before {
+    margin-right: 0.5em;
+}
+.icon-input-checkbox + [class^=icon-]:before {
+    content: '\f204';
+    color: {{.LightText}}
+}
+.icon-input-checkbox:checked + [class^=icon-]:before {
+    content: '\f205';
+    color: {{.NormalText}}
+}
+[type=radio].icon-input-checkbox + [class^=icon-]:before {
+    content: '\e812';
+    color: {{.LightText}};
+}
+[type=radio].icon-input-checkbox:checked + [class^=icon-]:before {
+    content: '\e813';
+    color: {{.MidGrayText}};
+}
+.icon-input-checkbox {
+    display: none 
+}
+.icon-input-checkbox + * + label {
+    cursor:pointer 
+}
+.icon-reply-outline.replied:before {
+    transform:rotate(-135deg); 
+}
+.post-options [name="anon"][value="1"] .icon-user-secret {
+    color: {{.GreenText}};
+}
+.post-options [name="reply-lock"]:not([value="0"]) .icon-lock {
+    display: block;
+    color: {{.GreenText}};
+}
+.post-options [name="reply-lock"]:not([value="0"]) .icon-lock-open {
+    display: none 
+}
+.post-options [name="reply-lock"][value="0"] .icon-lock {
+    display: none 
+}
+.post-options [name="reply-lock"][value="0"] .icon-lock-open {
+    display: block 
+}
+a[value=true] .icon-eye-off {
+    color: {{.NSFWText}};
+}
+a[value=false] .icon-eye-off {
+    color: {{.LightText}};
+}
+a[value=false] .icon-eye-off:before {
+    content: '\e81e';
+}
+
+.tribute-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: auto;
+    max-height: 300px;
+    max-width: 500px;
+    overflow: auto;
+    display: block;
+    z-index: 999999;
+}
+.tribute-container ul {
+    margin: 0;
+    margin-top: 2px;
+    padding: 0;
+    list-style: none;
+    background: {{.LightBG}};
+    border: solid 1px {{.Border}};
+}
+.tribute-container li {
+    padding: 5px 5px;
+    cursor: pointer; 
+}
+.tribute-container li.highlight {
+    background: {{.DropdownItemHover}}; 
+}
+.tribute-container li span {
+    font-weight: bold; 
+}
+.tribute-container li.no-match {
+    cursor: default; 
+}
+.tribute-container .menu-highlighted {
+    font-weight: bold; 
+}
+.dz-preview {
+    background-color: {{.LightBG}};
+    border: solid 1px {{.Border}};
+    overflow: hidden;
+}
+.dz-success-mark {
+    color: {{.Link}};
+}
+.dz-default:after {
+    color: {{.MidGrayText}};
+    content: '图片';
+}
+

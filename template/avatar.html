@@ -1,0 +1,9 @@
+{{if .}}
+{{if .Avatar}}
+    src="{{.AvatarURL}}" 
+{{else}}
+    src="/404-page" onerror="this.src=createAvatar('{{.ID}}').toDataURL('image/jpeg')"
+{{end}}
+{{else}}
+    src="/404-page" onerror="this.src=createAvatar('').toDataURL('image/jpeg')"
+{{end}}

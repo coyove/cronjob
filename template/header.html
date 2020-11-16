@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+    <head>
+    <link rel="stylesheet" href="/s/assets/dropzone.min.css?ver=3" />
+    <link rel="stylesheet" href="/s/fonts/fontello-embedded.css" />
+<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+    <script src="/s/js/default.1.js"></script>
+    <script src="/s/js/post.21.js"></script>
+    <script src="/s/js/tribute.min.js"></script>
+    <script src="/s/assets/dropzone.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/s/assets/favicon.png">
+
+<style>
+.image-avatar {
+    max-width: 32px;
+    max-height: 32px;
+    display: inline-block;
+}
+</style>
+
+    <script>
+        (function() {
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                document.write('<style>body, button, input, textarea {font-size: 16px !important }</style>')
+            }
+            Dropzone.autoDiscover = false;
+        })()
+
+        window.TRIBUTE_COL = {
+            trigger: '@',
+            selectClass: 'highlight',
+            containerClass: 'tribute-container',
+            selectTemplate: function (item) { return '@' + item.original.id; },
+            menuContainer: document.body,
+            lookup: 'key',
+            values: function remoteSearch(text, cb) {
+                $post("/api/search", { id: text }, function(results) {
+                    if (results && results.length) {
+                        results.forEach(function(t, i) {
+                            results[i] = { key: t.Display, id: t.ID, is_tag: t.IsTag } 
+                        });
+                    }
+                    JSON.parse(window.localStorage.getItem('presets') || '[]')
+                        .filter(function(t){ return t; })
+                        .forEach(function(t) {
+                            results.push({ key: t, id: t.substring(1), is_tag: t.substring(0, 1) == '#' }) 
+                        });
+                    var seen = {};
+                    results = results.filter(function(item) {
+                        return seen.hasOwnProperty(item.key) ? false : (seen[item.key] = true);
+                    });
+                    cb(results);
+                })
+            },
+            replaceTextSuffix: '\n',
+            positionMenu: true,
+        }
+
+        window.TRIBUTE_COL_TAGS = {
+            trigger: '#',
+            selectClass: 'highlight',
+            containerClass: 'tribute-container',
+            selectTemplate: function (item) { return '#' + item.original.id; },
+            menuContainer: document.body,
+            lookup: 'key',
+            values: window.TRIBUTE_COL.values,
+            replaceTextSuffix: '\n',
+            positionMenu: true,
+        }
+
+        window.TRIBUTER = new Tribute({
+            collection: [window.TRIBUTE_COL, window.TRIBUTE_COL_TAGS],
+	});
+
+      window.DUMMY_USER_HTML = "{{emptyUser}}";
+    </script>
+    </head>
+
+<body style="height: 100%">
+    <div class="ui container">
+        <a href="/inbox" id=unread-notify><i class="icon-mail-alt"></i><b></b></a>
+
+<div class="ui pointing menu">
+    <div class="item">
+        <i class="home icon"></i>首页
+    </div>
+    <div class="item">
+{{if .User}}
+        <div class="dropdown" id="user-dropdown">
+            <button class="btn btn-outline-dark dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <img id="main-avatar" class="image-avatar" {{template "avatar.html" .User}}>
+                {{.User.DisplayName}}
+            </button>
+            <div class="dropdown-menu">
+                <button class="dropdown-item" onclick='$input("更改显示名", null, "{{.User.Name}}", function(v) {
+                        $post(v.yes, "/api/user_settings", { "set-name": "1", "name": v[0].val() }, true)
+                        return false;
+                     })'>
+                    <i class='icon-pencil'></i> 改名
+                </button>
+                {{$tmp := session}}
+                <button class="dropdown-item" onclick='$input("更新头像", "头像大小限制: 150KB", [{
+                     value: $("<input>").attr("id", "{{$tmp}}").attr("type", "file").css("display", "none")
+                        .on("change", function() { selectAvatar($("#{{$tmp}}").get(0), 150 * 1024) })
+                 }, {
+                     value: $("<img>").attr("id", "img-{{$tmp}}").addClass("img-fluid").attr("src", $("#main-avatar").attr("src"))
+                        .on("click", function() { $("#{{$tmp}}").click() }),
+                 }], function(v) {
+                     $post(v.yes, "/api/user_settings", { "set-avatar": "1", "avatar": v[1].attr("src") }).closeInput();
+                     return false;
+                 })'>
+                    <i class='icon-camera'></i> 更新头像
+                </button>
+                <button class="dropdown-item" onclick='$input("更新Email", null, "{{.User.Email}}", function(v) {
+                        $post(v.yes, "/api/user_settings", { "set-email": "1", "email": v[0].val() }).closeInput()
+                        return false
+                     })'>
+                    <i class='icon-mail-alt'></i> 更新Email
+                </button>
+                <button class="dropdown-item" onclick='$post(null, "/api2/login_records").then(function(r) {
+                     var el = $("<table>").addClass("table table-borderless table-striped").append($("<thead>")
+                        .append($("<th>").text("IP")).append($("<th>").text("日期")).append($("<th>").text("UA")))
+                     for (var r of r) {
+                        el.append($("<tr>")
+                            .append($("<td>").text(r.IP))
+                            .append($("<td>").text(new Date(r.Time * 1000).toLocaleString()))
+                            .append($("<td>").text(r.UserAgent))
+                        );
+                     }
+                     $dialog("登入IP历史", $("<div>").addClass("table-responsive-md").append(el))
+                 })'>
+                    <i class='icon-calendar'></i> 登入历史
+                </button>
+                <button class='dropdown-item' onclick='$input("修改密码", "新密码至少需要3字符", [
+                            { text: "旧密码", value: "", password: true },
+                            { text: "新密码", value: "", password: true },
+                            { text: "重复新密码", value: "", password: true },
+                        ], function (ii) {
+                            if (!ii[0].val() || !ii[1].val() || !ii[2].val()) return false;
+                            if (ii[2].val() !== ii[1].val()) return $dialog(null, "新密码两次输入不一致");
+                            $post(ii.yes, "/api2/user_password", { "old-password": ii[0].val(), "new-password": ii[1].val() }).closeInput()
+                            return false;
+                        })'>
+                    <i class='icon-lock'></i> 修改密码
+                </button>
+                <button class="dropdown-item"
+                     onclick="confirm('确认登出 {{.User.DisplayName}}')?$post(this,'/api2/logout',{},true):0">
+                    <i class="icon-logout"></i> 退出账号
+                </button>
+                {{if .User.IsAdmin}}
+                <div class="item">
+                    <i class="table icon"></i><a href="/debug/pprof/">pprof</a>
+                </div>
+                {{end}}
+            </div>
+        </div>
+{{else}}
+    <div class="dropdown" id="user-dropdown">
+        <a class="btn btn-outline-dark" href="/user">
+        <img class="image-avatar" {{template "avatar.html" false}}>
+            登入/注册
+        </a>
+    </div>
+{{end}}
+    </div>
+</div>

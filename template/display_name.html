@@ -1,0 +1,35 @@
+{{if eq .ShowList 255}}
+<span class=post-author>
+    ? <span style="opacity:0.5">{{.ID}}</span> ?
+</span>
+{{else if .IsAnon}}
+<span class=post-author>
+    <strong class=tmpl-mid-text>* 匿名 *</strong>
+</span>
+{{else}}
+<span class=post-author data="{{.CustomName}}">
+    {{if .Banned}}<span><strong>封禁</strong></span>{{end}}
+    {{if .IsAPI}}<i class="icon-android tmpl-green-text"></i>{{end}}
+
+    <a href="/t/{{urlquery .ID}}" class="tmpl-normal-text">
+        {{if .CustomName}}
+        <strong>{{.CustomName}}</strong>
+        <span mod={{.IsMod}} {{if not .IsMod}}class="tmpl-mid-text"{{end}}>@{{.ID}}</span>
+        {{else}}
+        <strong mod={{.IsMod}}>{{.DisplayName}}</strong>
+        {{end}}
+    </a>
+
+    {{if eq .ShowList 'f'}}
+    | 关注
+    {{else if eq .ShowList 'b'}}
+    | 黑名单
+    {{else if eq .ShowList 's'}}
+    | 粉丝
+    {{else if eq .ShowList 'r'}}
+    | 你们的关系
+    {{else if eq .ShowList 'S'}}
+    | 设置
+    {{end}}
+</span>
+{{end}}
